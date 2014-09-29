@@ -14,19 +14,19 @@ var TouchSession = function(options) {
     this._startTouchPosition = null;
     this._startTouchTime = null;
     this._lastTouchPosition = null;
+    this._lastTouchPositionDelta = 0;
     this._lastTouchTime = null;
-    this._lastTouchDeltaPosition = 0;
-    this._lastTouchDeltaTime = 0;
+    this._lastTouchTimeDelta = 0;
 };
 _.assign(TouchSession.prototype, {
     getLastTouchDelta: function() {
-        return this._lastTouchDeltaPosition;
+        return this._lastTouchPositionDelta;
     },
     recordTouch: function(touchPosition) {
         var now = Date.now();
         if (this._lastTouchPosition) {
-            this._lastTouchDeltaPosition = -(touchPosition - this._lastTouchPosition);
-            this._lastTouchDeltaTime = now - this._lastTouchTime;
+            this._lastTouchPositionDelta = -(touchPosition - this._lastTouchPosition);
+            this._lastTouchTimeDelta = now - this._lastTouchTime;
         } else {
             this._startTouchPosition = touchPosition;
             this._startTouchTime = now;
@@ -68,7 +68,7 @@ _.assign(TouchSession.prototype, {
         return false;
     },
     _detectSwipe: function() {
-        var velocity = this._lastTouchDeltaPosition / this._lastTouchDeltaTime;
+        var velocity = this._lastTouchPositionDelta / this._lastTouchTimeDelta;
         if (Math.abs(velocity) > this._settings.swipeVelocityThreshold) {
             return velocity;
         }

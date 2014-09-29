@@ -4,7 +4,7 @@ var _ = require('lodash');
 
 var NOOP = function() {};
 
-var Tween = function(start, end, duration, easing, callbacks) {
+var tween = function(start, end, duration, easing, callbacks) {
     callbacks = _.defaults(callbacks || {}, {
         tick: NOOP,
         done: NOOP
@@ -46,4 +46,4 @@ var Tween = function(start, end, duration, easing, callbacks) {
         }
     };
 };
-module.exports = Tween;
+module.exports = tween;

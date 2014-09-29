@@ -1,10 +1,10 @@
 'use strict';
 
 var _ = require('lodash');
-var Easing = require('./easing');
+var EasingFunctions = require('./easing-functions');
 var React = require('react');
 var TouchSession = require('./touch-session');
-var Tween = require('./tween');
+var tween = require('./tween');
 
 var VirtualList = React.createClass({
     getDefaultProps: function() {
@@ -12,6 +12,7 @@ var VirtualList = React.createClass({
             // Optional:
             className: 'virtual-list',
             itemsToOverflow: 5,
+            swipeEasing: EasingFunctions.easeOutCubic,
             touchSessionFactory: TouchSession.start,
             // Required:
             initialItemSizes: [],
@@ -126,18 +127,17 @@ var VirtualList = React.createClass({
         this._touchSession = null;
     },
     handleTouchTap: function() {
-        console.log('detected tap');
+        // console.log('detected tap');
     },
     handleTouchHold: function() {
-        console.log('detected hold');
+        // console.log('detected hold');
     },
     handleTouchSwipe: function(velocity) {
-        console.log('detected swipe', velocity);
         var duration = 1250;
         var startPosition = this.state.scrollPosition;
         var endPosition = startPosition + (velocity * duration);
         var lastTickPosition = startPosition;
-        this._tweener = Tween(startPosition, endPosition, duration, Easing.easeOutCubic, {
+        this._tweener = tween(startPosition, endPosition, duration, this.props.swipeEasing, {
             tick: function(position) {
                 var deltaPosition = position - lastTickPosition;
                 this.updateScrollPosition(deltaPosition);

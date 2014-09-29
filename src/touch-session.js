@@ -2,14 +2,11 @@
 
 var _ = require('lodash');
 
-var SWIPE_VELOCITY_THRESHOLD = 0.7;
+var SWIPE_VELOCITY_THRESHOLD = 0.5;
 var TAP_TIME_THRESHOLD = 250;
 var NOOP = function() {};
 
 var TouchSession = function(options) {
-    //---------------------------------------------------------
-    // Private state
-    //---------------------------------------------------------
     this._settings = _.defaults(options || {
         swipeVelocityThreshold: SWIPE_VELOCITY_THRESHOLD,
         tapTimeThreshold: TAP_TIME_THRESHOLD
@@ -22,9 +19,6 @@ var TouchSession = function(options) {
     this._lastTouchDeltaTime = 0;
 };
 _.assign(TouchSession.prototype, {
-    //---------------------------------------------------------
-    // Public
-    //---------------------------------------------------------
     getLastTouchDelta: function() {
         return this._lastTouchDeltaPosition;
     },
@@ -57,9 +51,6 @@ _.assign(TouchSession.prototype, {
             return handlers.onSwipe(velocity);
         }
     },
-    //---------------------------------------------------------
-    // Private
-    //---------------------------------------------------------
     _detectTap: function() {
         var deltaPosition = this._lastTouchPosition - this._startTouchPosition;
         if (deltaPosition === 0) {
@@ -84,9 +75,6 @@ _.assign(TouchSession.prototype, {
         return false;
     }
 });
-//---------------------------------------------------------
-// Static
-//---------------------------------------------------------
 TouchSession.start = function() {
     return new TouchSession();
 };

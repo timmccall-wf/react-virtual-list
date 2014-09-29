@@ -1,17 +1,12 @@
 'use strict';
 
 var _ = require('lodash');
+var Easing = require('./easing');
 var React = require('react');
 var TouchSession = require('./touch-session');
+var Tween = require('./tween');
 
 var VirtualList = React.createClass({
-    //---------------------------------------------------------
-    // Public
-    //---------------------------------------------------------
-
-    //---------------------------------------------------------
-    // Internal
-    //---------------------------------------------------------
     getDefaultProps: function() {
         return {
             // Optional:
@@ -49,7 +44,6 @@ var VirtualList = React.createClass({
         );
     },
     render: function() {
-        console.debug('render', this.state);
         // List items to render.
         var items = [];
         for (var i = this.state.startIndex; i <= this.state.endIndex; i++) {
@@ -103,6 +97,11 @@ var VirtualList = React.createClass({
         return viewport;
     },
     handleTouchStart: function(evt) {
+        // If tweening a change in position, stop!
+        if (this._tweener) {
+            this._tweener.cancel();
+            this._tweener = null;
+        }
         var layout = this.props.layout;
         var touchPosition = layout.getTouchPosition(evt);
         var touchSession = this.props.touchSessionFactory();
@@ -119,20 +118,32 @@ var VirtualList = React.createClass({
         evt.preventDefault();
     },
     handleTouchEnd: function() {
-        var self = this;
         this._touchSession.detectGestures({
-            onTap: function() {
-                console.log('detected tap');
-            },
-            onHold: function() {
-                console.log('detected hold');
-            },
-            onSwipe: function(velocity) {
-                var animateDelta = velocity * 1000;
-                console.log('detected swipe', animateDelta);
-            }
+            onTap: this.handleTouchTap,
+            onHold: this.handleTouchHold,
+            onSwipe: this.handleTouchSwipe
         });
         this._touchSession = null;
+    },
+    handleTouchTap: function() {
+        console.log('detected tap');
+    },
+    handleTouchHold: function() {
+        console.log('detected hold');
+    },
+    handleTouchSwipe: function(velocity) {
+        console.log('detected swipe', velocity);
+        var duration = 1250;
+        var startPosition = this.state.scrollPosition;
+        var endPosition = startPosition + (velocity * duration);
+        var lastTickPosition = startPosition;
+        this._tweener = Tween(startPosition, endPosition, duration, Easing.easeOutQuint, {
+            tick: function(position) {
+                var deltaPosition = position - lastTickPosition;
+                this.updateScrollPosition(deltaPosition);
+                lastTickPosition = position;
+            }.bind(this)
+        });
     },
     handleWheel: function(evt) {
         var layout = this.props.layout;

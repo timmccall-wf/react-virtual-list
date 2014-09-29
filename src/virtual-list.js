@@ -137,7 +137,7 @@ var VirtualList = React.createClass({
         var startPosition = this.state.scrollPosition;
         var endPosition = startPosition + (velocity * duration);
         var lastTickPosition = startPosition;
-        this._tweener = Tween(startPosition, endPosition, duration, Easing.easeOutQuint, {
+        this._tweener = Tween(startPosition, endPosition, duration, Easing.easeOutCubic, {
             tick: function(position) {
                 var deltaPosition = position - lastTickPosition;
                 this.updateScrollPosition(deltaPosition);

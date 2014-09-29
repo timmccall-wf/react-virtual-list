@@ -4,7 +4,7 @@ React Virtual List
 > Virtual list implementation using React
 
 Usage
-===
+---
 
 You must provide three things, at minimum:
 - a layout;

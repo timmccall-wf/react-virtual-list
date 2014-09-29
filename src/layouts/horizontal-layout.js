@@ -4,10 +4,8 @@ var _ = require('lodash');
 var LayoutBase = require('./layout-base');
 
 var HorizontalLayout = _.assign({}, LayoutBase, {
-    getSizeValue: function(component, itemIndex) {
-        var itemSizes = component.state.itemSizes;
-        var value = itemSizes[itemIndex].width;
-        return value;
+    getSizeValue: function(itemSize) {
+        return itemSize.width;
     },
     getStyles: function() {
         return {
@@ -23,14 +21,11 @@ var HorizontalLayout = _.assign({}, LayoutBase, {
     getTouchPositionValue: function(touch) {
         return touch.pageX;
     },
-    getTranslation: function(component) {
-        var value = this.getTranslationValue(component);
-        return 'translate3d(' + value + 'px, 0, 0)';
+    getTranslation: function(translateValue) {
+        return 'translate3d(' + translateValue + 'px, 0, 0)';
     },
-    getViewportSize: function(component) {
-        var element = component.getDOMNode();
-        var size = element.clientWidth;
-        return size;
+    getViewportSize: function(viewportElement) {
+        return viewportElement.clientWidth;
     },
     getWheelEventDelta: function(evt) {
         return evt.deltaX;

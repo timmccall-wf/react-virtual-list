@@ -4,7 +4,7 @@ var LayoutBase = {
     //---------------------------------------------------------
     // Abstract: MUST OVERRIDE!
     //---------------------------------------------------------
-    getSizeValue: function(/*component, itemIndex*/) {
+    getSizeValue: function(/*itemSize*/) {
         throw Error('not implemented');
     },
     getStyles: function() {
@@ -13,10 +13,10 @@ var LayoutBase = {
     getTouchPositionValue: function(/*touch*/) {
         throw Error('not implemented');
     },
-    getTranslation: function(/*component*/) {
+    getTranslation: function(/*translateValue*/) {
         throw Error('not implemented');
     },
-    getViewportSize: function(/*component*/) {
+    getViewportSize: function(/*viewportElement*/) {
         throw Error('not implemented');
     },
     getWheelEventDelta: function(/*evt*/) {
@@ -25,29 +25,27 @@ var LayoutBase = {
     //---------------------------------------------------------
     // Concrete
     //---------------------------------------------------------
-    constrainScrollPosition: function(component, scrollPosition) {
-        var itemSizes = component.state.itemSizes;
+    constrainScrollPosition: function(itemSizes, scrollPosition, viewportElement) {
         var totalSize = 0;
         for (var i = 0, n = itemSizes.length; i < n; i++) {
-            var itemSizeValue = this.getSizeValue(component, i);
+            var itemSize = itemSizes[i];
+            var itemSizeValue = this.getSizeValue(itemSize);
             totalSize += itemSizeValue;
         }
-        var viewportSize = this.getViewportSize(component);
+        var viewportSize = this.getViewportSize(viewportElement);
         var maxPosition = totalSize - viewportSize;
         return Math.max(0, Math.min(maxPosition, scrollPosition));
     },
-    getRangeToRender: function(component, scrollPosition) {
-        var itemSizes = component.state.itemSizes;
+    getRangeToRender: function(itemSizes, viewportBounds, itemsToOverflow) {
         var numberOfItems = itemSizes.length;
         var cumulativePosition = 0;
         var i = 0;
+        var itemSize;
         var itemSizeValue;
-        var itemsToOverflow = component.props.itemsToOverflow;
-        // Calc the top and bottom of the list visible in the viewport.
-        var viewportBounds = this.getViewportBounds(component, scrollPosition);
         // Calculate the new start index.
         for (; i < numberOfItems; i++) {
-            itemSizeValue = this.getSizeValue(component, i);
+            itemSize = itemSizes[i];
+            itemSizeValue = this.getSizeValue(itemSize);
             if (cumulativePosition + itemSizeValue >= viewportBounds.min) {
                 break;
             }
@@ -56,7 +54,8 @@ var LayoutBase = {
         var startIndex = Math.max(0, i - itemsToOverflow);
         // Calculate the new end index.
         for (; i < numberOfItems; i++) {
-            itemSizeValue = this.getSizeValue(component, i);
+            itemSize = itemSizes[i];
+            itemSizeValue = this.getSizeValue(itemSize);
             if (cumulativePosition + itemSizeValue >= viewportBounds.max) {
                 break;
             }
@@ -69,10 +68,11 @@ var LayoutBase = {
             endIndex: endIndex
         };
     },
-    getScrollOffset: function(component, startIndex) {
+    getScrollOffset: function(itemSizes, startIndex) {
         var scrollOffset = 0;
         for (var i = 0; i < startIndex; i++) {
-            scrollOffset += this.getSizeValue(component, i);
+            var itemSize = itemSizes[i];
+            scrollOffset += this.getSizeValue(itemSize);
         }
         return scrollOffset;
     },
@@ -85,16 +85,10 @@ var LayoutBase = {
         }
         return sumPosition / n;
     },
-    getTranslationValue: function(component) {
-        return -component.state.scrollPosition + component.state.scrollOffset;
-    },
-    getViewportBounds: function(component, scrollPosition) {
-        var min = scrollPosition || component.state.scrollPosition;
-        var size = this.getViewportSize(component);
-        var max = min + size;
+    getViewportBounds: function(scrollPosition, viewportSize) {
         return {
-            min: min,
-            max: max
+            min: scrollPosition,
+            max: scrollPosition + viewportSize
         };
     }
 };

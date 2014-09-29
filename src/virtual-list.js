@@ -7,6 +7,13 @@ var TouchSession = require('./touch-session');
 var tween = require('./tween');
 
 var VirtualList = React.createClass({
+    setScrollPosition: function(position) {
+        var layout = this.props.layout;
+        var nextScrollPosition = layout.constrainScrollPosition(
+            this.state.itemSizes, position, this.getDOMNode()
+        );
+        this.setState({ scrollPosition: nextScrollPosition });
+    },
     getDefaultProps: function() {
         return {
             // Optional:
@@ -23,41 +30,51 @@ var VirtualList = React.createClass({
     getInitialState: function() {
         return {
             itemSizes: this.props.initialItemSizes,
-            scrollOffset: 0,
             scrollPosition: 0,
-            startIndex: 0,
-            endIndex: -1,
             useWheelHitArea: false
         };
     },
     componentDidMount: function() {
-        // Calculate the initial endIndex based on the props.
-        var layout = this.props.layout;
-        var rangeToRender = layout.getRangeToRender(this);
-        this.setState(rangeToRender);
-    },
-    shouldComponentUpdate: function(nextProps, nextState) {
-        return (
-            this.state.useWheelHitArea !== nextState.useWheelHitArea ||
-            this.state.scrollPosition != nextState.scrollPosition ||
-            this.state.startIndex !== nextState.startIndex ||
-            this.state.endIndex !== nextState.endIndex
-        );
+        this.setScrollPosition(0);
     },
     render: function() {
-        // List items to render.
-        var items = [];
-        for (var i = this.state.startIndex; i <= this.state.endIndex; i++) {
-            var item = this.props.itemRenderer({ key: i });
-            items.push(item);
-        }
         var layout = this.props.layout;
         var styles = layout.getStyles();
-        // List container is needed for horizontal scrolling.
+        var itemSizes = this.state.itemSizes;
+        // Create list items to render. On first pass render no items, since
+        // the start and end indexes of the range to render are dependent on the
+        // size of the viewport, which doesn't exist until after the component
+        // is mounted.
+        var items = [];
+        var scrollPosition;
+        var rangeToRender;
+        if (this.isMounted()) {
+            scrollPosition = this.state.scrollPosition;
+            var viewportElement = this.getDOMNode();
+            var viewportSize = layout.getViewportSize(viewportElement);
+            var viewportBounds = layout.getViewportBounds(scrollPosition, viewportSize);
+            rangeToRender = layout.getRangeToRender(
+                itemSizes, viewportBounds, this.props.itemsToOverflow
+            );
+            for (var i = rangeToRender.startIndex; i <= rangeToRender.endIndex; i++) {
+                var item = this.props.itemRenderer({ key: i });
+                items.push(item);
+            }
+        }
+        // Create a list container to translate the list content. Again, wait
+        // until the component before attempting to calculate the translation
+        // base on current scroll position, since this calculation depends
+        // on getting the range to render.
+        var translationValue = 0;
+        if (this.isMounted()) {
+            var scrollOffset = layout.getScrollOffset(itemSizes, rangeToRender.startIndex);
+            translationValue = -scrollPosition + scrollOffset;
+        }
+        var transform = layout.getTranslation(translationValue);
         var listContainer = React.DOM.div({
             className: 'item-container',
             style: _.assign({}, styles.listContainer, {
-                '-webkit-transform': layout.getTranslation(this)
+                '-webkit-transform': transform
             }),
         }, items);
         // Wheel hit area is needed to prevent sudden stop of hardware generated
@@ -84,7 +101,7 @@ var VirtualList = React.createClass({
                 })
             });
         }
-        // Viewport hosts the list content and proves a clipping region.
+        // Viewport hosts the list content and provides a clipping region.
         var viewport = React.DOM.div({
             className: this.props.className,
             style: _.assign({}, styles.viewport, {
@@ -136,45 +153,28 @@ var VirtualList = React.createClass({
         var duration = 1250;
         var startPosition = this.state.scrollPosition;
         var endPosition = startPosition + (velocity * duration);
-        var lastTickPosition = startPosition;
         this._tweener = tween(startPosition, endPosition, duration, this.props.swipeEasing, {
-            tick: function(position) {
-                var deltaPosition = position - lastTickPosition;
-                this.updateScrollPosition(deltaPosition);
-                lastTickPosition = position;
+            tick: function(currentPosition) {
+                this.setScrollPosition(currentPosition);
             }.bind(this)
         });
     },
     handleWheel: function(evt) {
         var layout = this.props.layout;
         var wheelDelta = layout.getWheelEventDelta(evt);
-        this.updateScrollPosition(wheelDelta, { useWheelHitArea: true });
-        // Prevent window bounce when wheel has no effect and bubbles out.
-        evt.preventDefault();
-        // Remove the wheel hit area shortly after the last wheel event.
+        var newScrollPosition = this.state.scrollPosition + wheelDelta;
+        this.setScrollPosition(newScrollPosition);
+        // Enable the wheel hit area and set a timer to remove it shortly after
+        // the last wheel event occurs.
+        this.setState({ useWheelHitArea: true });
         if (!this._debouncedRemoveWheelHitArea) {
-            this._debouncedRemoveWheelHitArea = _.debounce(this.removeWheelHitArea, 50);
+            this._debouncedRemoveWheelHitArea = _.debounce(function() {
+                this.setState({ useWheelHitArea: false });
+            }.bind(this), 50);
         }
         this._debouncedRemoveWheelHitArea();
-    },
-    updateScrollPosition: function(delta, additionalState) {
-        var layout = this.props.layout;
-        var newScrollPosition = this.state.scrollPosition + delta;
-        var nextScrollPosition = layout.constrainScrollPosition(this, newScrollPosition);
-        var rangeToRender = layout.getRangeToRender(this, nextScrollPosition);
-        var nextScrollOffset = layout.getScrollOffset(this, rangeToRender.startIndex);
-        var nextState = _.assign({
-            scrollPosition: nextScrollPosition,
-            scrollOffset: nextScrollOffset,
-            startIndex: rangeToRender.startIndex,
-            endIndex: rangeToRender.endIndex
-        }, additionalState);
-        this.setState(nextState);
-    },
-    removeWheelHitArea: function() {
-        this.setState({
-            useWheelHitArea: false
-        });
+        // Prevent window bounce when wheel has no effect and bubbles out.
+        evt.preventDefault();
     }
 });
 module.exports = VirtualList;

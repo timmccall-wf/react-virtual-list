@@ -1,0 +1,24 @@
+{
+  "name": "react-virtual-list-2",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "colors": "^0.6.2",
+    "gulp": "^3.8.8",
+    "gulp-browserify": "^0.5.0",
+    "gulp-jshint": "^1.8.4",
+    "jshint-stylish-recolor": "^0.2.0-a",
+    "lodash": "^2.4.1",
+    "node-static": "^0.7.4",
+    "react": "^0.11.1"
+  },
+  "dependencies": {
+    "react": "^0.11.1"
+  }
+}

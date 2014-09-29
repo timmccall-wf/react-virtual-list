@@ -75,7 +75,7 @@ _.assign(TouchSession.prototype, {
         return false;
     }
 });
-TouchSession.start = function() {
+TouchSession.create = function() {
     return new TouchSession();
 };
 module.exports = TouchSession;

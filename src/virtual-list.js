@@ -9,18 +9,18 @@ var tween = require('./tween');
 var VirtualList = React.createClass({
     setScrollPosition: function(position) {
         var layout = this.props.layout;
-        var nextScrollPosition = layout.constrainScrollPosition(
+        var validatedPosition = layout.constrainScrollPosition(
             this.state.itemSizes, position, this.getDOMNode()
         );
-        this.setState({ scrollPosition: nextScrollPosition });
+        this.setState({ scrollPosition: validatedPosition });
     },
     getDefaultProps: function() {
         return {
             // Optional:
-            className: 'virtual-list',
+            className: null,
             itemsToOverflow: 5,
             swipeEasing: EasingFunctions.easeOutCubic,
-            touchSessionFactory: TouchSession.start,
+            touchSessionFactory: TouchSession.create,
             // Required:
             initialItemSizes: [],
             layout: null,
@@ -35,6 +35,9 @@ var VirtualList = React.createClass({
         };
     },
     componentDidMount: function() {
+        // No items are rendered during initial mounting since this component
+        // need to know about the viewport DOM node to calculate the range of
+        // items to render. Set the scroll position to trigger a rerendering.
         this.setScrollPosition(0);
     },
     render: function() {
@@ -72,7 +75,7 @@ var VirtualList = React.createClass({
         }
         var transform = layout.getTranslation(translationValue);
         var listContainer = React.DOM.div({
-            className: 'item-container',
+            className: 'rvl-item-container',
             style: _.assign({}, styles.listContainer, {
                 '-webkit-transform': transform
             }),
@@ -90,7 +93,7 @@ var VirtualList = React.createClass({
         var wheelHitArea;
         if (this.state.useWheelHitArea) {
             wheelHitArea = React.DOM.div({
-                className: 'wheel-hit-area',
+                className: 'rvl-wheel-hit-area',
                 style: _.assign({
                     position: 'absolute',
                     zIndex: 1000,
@@ -103,7 +106,7 @@ var VirtualList = React.createClass({
         }
         // Viewport hosts the list content and provides a clipping region.
         var viewport = React.DOM.div({
-            className: this.props.className,
+            className: [this.props.className, 'rvl-viewport'].join(' '),
             style: _.assign({}, styles.viewport, {
                 position: 'relative'
             }),
@@ -125,6 +128,8 @@ var VirtualList = React.createClass({
         var touchSession = this.props.touchSessionFactory();
         touchSession.recordTouch(touchPosition);
         this._touchSession = touchSession;
+        // Prevent window movement from default window touch start handling.
+        evt.preventDefault();
     },
     handleTouchMove: function(evt) {
         var layout = this.props.layout;
@@ -135,13 +140,15 @@ var VirtualList = React.createClass({
         // Prevent window movement from default window touch move handling.
         evt.preventDefault();
     },
-    handleTouchEnd: function() {
+    handleTouchEnd: function(evt) {
         this._touchSession.detectGestures({
             onTap: this.handleTouchTap,
             onHold: this.handleTouchHold,
             onSwipe: this.handleTouchSwipe
         });
         this._touchSession = null;
+        // Be consistent with other touch handlers.
+        evt.preventDefault();
     },
     handleTouchTap: function() {
         // console.log('detected tap');

@@ -15,6 +15,7 @@ React.initializeTouchEvents(true);
 
 var horizontalList = React.renderComponent(
     VirtualList({
+        className: 'virtual-list',
         initialItemSizes: itemSizes,
         layout: HorizontalLayout,
         itemRenderer: ListItem
@@ -24,6 +25,7 @@ var horizontalList = React.renderComponent(
 
 var verticalList = React.renderComponent(
     VirtualList({
+        className: 'virtual-list',
         initialItemSizes: itemSizes,
         layout: VerticalLayout,
         itemRenderer: ListItem

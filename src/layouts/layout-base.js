@@ -36,7 +36,7 @@ var LayoutBase = {
         var maxPosition = totalSize - viewportSize;
         return Math.max(0, Math.min(maxPosition, scrollPosition));
     },
-    getRangeToRender: function(component) {
+    getRangeToRender: function(component, scrollPosition) {
         var itemSizes = component.state.itemSizes;
         var numberOfItems = itemSizes.length;
         var cumulativePosition = 0;
@@ -44,7 +44,7 @@ var LayoutBase = {
         var itemSizeValue;
         var itemsToOverflow = component.props.itemsToOverflow;
         // Calc the top and bottom of the list visible in the viewport.
-        var viewportBounds = this.getViewportBounds(component);
+        var viewportBounds = this.getViewportBounds(component, scrollPosition);
         // Calculate the new start index.
         for (; i < numberOfItems; i++) {
             itemSizeValue = this.getSizeValue(component, i);
@@ -88,8 +88,8 @@ var LayoutBase = {
     getTranslationValue: function(component) {
         return -component.state.scrollPosition + component.state.scrollOffset;
     },
-    getViewportBounds: function(component) {
-        var min = component.state.scrollPosition;
+    getViewportBounds: function(component, scrollPosition) {
+        var min = scrollPosition || component.state.scrollPosition;
         var size = this.getViewportSize(component);
         var max = min + size;
         return {

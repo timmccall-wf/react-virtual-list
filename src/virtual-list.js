@@ -49,6 +49,7 @@ var VirtualList = React.createClass({
         );
     },
     render: function() {
+        console.debug('render', this.state);
         // List items to render.
         var items = [];
         for (var i = this.state.startIndex; i <= this.state.endIndex; i++) {
@@ -118,10 +119,18 @@ var VirtualList = React.createClass({
         evt.preventDefault();
     },
     handleTouchEnd: function() {
+        var self = this;
         this._touchSession.detectGestures({
-            onTap: function() { console.log('detected tap'); },
-            onHold: function() { console.log('detected hold'); },
-            onSwipe: function() { console.log('detected swipe'); }
+            onTap: function() {
+                console.log('detected tap');
+            },
+            onHold: function() {
+                console.log('detected hold');
+            },
+            onSwipe: function(velocity) {
+                var animateDelta = velocity * 1000;
+                console.log('detected swipe', animateDelta);
+            }
         });
         this._touchSession = null;
     },
@@ -139,9 +148,9 @@ var VirtualList = React.createClass({
     },
     updateScrollPosition: function(delta, additionalState) {
         var layout = this.props.layout;
-        var rangeToRender = layout.getRangeToRender(this);
         var newScrollPosition = this.state.scrollPosition + delta;
         var nextScrollPosition = layout.constrainScrollPosition(this, newScrollPosition);
+        var rangeToRender = layout.getRangeToRender(this, nextScrollPosition);
         var nextScrollOffset = layout.getScrollOffset(this, rangeToRender.startIndex);
         var nextState = _.assign({
             scrollPosition: nextScrollPosition,

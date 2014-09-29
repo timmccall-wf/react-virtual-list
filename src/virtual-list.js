@@ -21,7 +21,7 @@ var VirtualList = React.createClass({
             // Required:
             initialItemSizes: [],
             layout: null,
-            renderer: null,
+            itemRenderer: null,
         };
     },
     getInitialState: function() {
@@ -52,7 +52,7 @@ var VirtualList = React.createClass({
         // List items to render.
         var items = [];
         for (var i = this.state.startIndex; i <= this.state.endIndex; i++) {
-            var item = this.props.renderer({ key: i });
+            var item = this.props.itemRenderer({ key: i });
             items.push(item);
         }
         var layout = this.props.layout;

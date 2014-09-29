@@ -17,7 +17,7 @@ var horizontalList = React.renderComponent(
     VirtualList({
         initialItemSizes: itemSizes,
         layout: HorizontalLayout,
-        renderer: ListItem
+        itemRenderer: ListItem
     }),
     document.getElementById('container-horizontal')
 );
@@ -26,7 +26,7 @@ var verticalList = React.renderComponent(
     VirtualList({
         initialItemSizes: itemSizes,
         layout: VerticalLayout,
-        renderer: ListItem
+        itemRenderer: ListItem
     }),
     document.getElementById('container-vertical')
 );
